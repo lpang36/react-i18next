@@ -74,6 +74,9 @@ export function nodesToString(children, i18nOptions) {
       }
     } else if (child === null) {
       warn(`Trans: the passed in value is invalid - seems you passed in a null child.`);
+    } else if (Array.isArray(child)) {
+      const content = nodesToString(child, i18nOptions);
+      stringNode += `<${childIndex}>${content}</${childIndex}>`;
     } else if (typeof child === 'object') {
       // e.g. lorem {{ value, format }} ipsum
       const { format, ...clone } = child;
@@ -100,7 +103,7 @@ export function nodesToString(children, i18nOptions) {
   return stringNode;
 }
 
-function renderNodes(children, targetString, i18n, i18nOptions, combinedTOpts) {
+function renderNodes(children, targetString, i18n, i18nOptions, combinedTOpts, t) {
   if (targetString === '') return [];
 
   // check if contains tags we need to replace from html string to react nodes
@@ -133,10 +136,11 @@ function renderNodes(children, targetString, i18n, i18nOptions, combinedTOpts) {
   const opts = { ...data, ...combinedTOpts };
 
   function renderInner(child, node, rootReactNode) {
-    const childs = getChildren(child);
+    const childs = getAsArray(getChildren(child));
     const mappedChildren = mapAST(childs, node.children, rootReactNode);
     // console.warn('INNER', node.name, node, child, childs, node.children, mappedChildren);
-    return hasValidReactChildren(childs) && mappedChildren.length === 0 ? childs : mappedChildren;
+    return hasValidReactChildren(childs) && mappedChildren.length === 0 ? childs :
+          Array.isArray(child?.props?.children) ? mappedChildren : mappedChildren[0];
   }
 
   function pushTranslatedJSX(child, inner, mem, i, isVoid) {
@@ -227,6 +231,13 @@ function renderNodes(children, targetString, i18n, i18nOptions, combinedTOpts) {
 
             mem.push(`<${node.name}>${inner}</${node.name}>`);
           }
+        } else if (Array.isArray(child)) {
+          const inner = mapAST(
+            child,
+            node.children,
+            rootReactNode,
+          );
+          mem.push(inner);
         } else if (typeof child === 'object' && !isElement) {
           const content = node.children[0] ? translationContent : null;
 
@@ -244,7 +255,8 @@ function renderNodes(children, targetString, i18n, i18nOptions, combinedTOpts) {
         }
       } else if (node.type === 'text') {
         const wrapTextNodes = i18nOptions.transWrapTextNodes;
-        const content = i18n.services.interpolator.interpolate(node.content, opts, i18n.language);
+        combinedTOpts.defaultValue = node.content;
+        const content = i18n.services.interpolator.interpolate(t(node.content, combinedTOpts), opts, i18n.language);
         if (wrapTextNodes) {
           mem.push(React.createElement(wrapTextNodes, { key: `${node.name}-${i}` }, content));
         } else {
@@ -266,7 +278,6 @@ export function Trans({
   children,
   count,
   parent,
-  i18nKey,
   tOptions = {},
   values,
   defaults,
@@ -295,10 +306,8 @@ export function Trans({
   const defaultValue =
     defaults ||
     nodesToString(children, reactI18nextOptions) ||
-    reactI18nextOptions.transEmptyNodeValue ||
-    i18nKey;
-  const { hashTransKey } = reactI18nextOptions;
-  const key = i18nKey || (hashTransKey ? hashTransKey(defaultValue) : defaultValue);
+    reactI18nextOptions.transEmptyNodeValue;
+  const key = defaultValue;
   const interpolationOverride = values
     ? tOptions.interpolation
     : { interpolation: { ...tOptions.interpolation, prefix: '#$?', suffix: '?$#' } };
@@ -318,6 +327,7 @@ export function Trans({
     i18n,
     reactI18nextOptions,
     combinedTOpts,
+    t,
   );
 
   // allows user to pass `null` to `parent`

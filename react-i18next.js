@@ -2,7 +2,7 @@
   typeof exports === 'object' && typeof module !== 'undefined' ? factory(exports, require('react')) :
   typeof define === 'function' && define.amd ? define(['exports', 'react'], factory) :
   (global = global || self, factory(global.ReactI18next = {}, global.React));
-}(this, function (exports, React) { 'use strict';
+}(this, (function (exports, React) { 'use strict';
 
   var React__default = 'default' in React ? React['default'] : React;
 
@@ -97,6 +97,50 @@
     return obj;
   }
 
+  function _inherits(subClass, superClass) {
+    if (typeof superClass !== "function" && superClass !== null) {
+      throw new TypeError("Super expression must either be null or a function");
+    }
+
+    subClass.prototype = Object.create(superClass && superClass.prototype, {
+      constructor: {
+        value: subClass,
+        writable: true,
+        configurable: true
+      }
+    });
+    if (superClass) _setPrototypeOf(subClass, superClass);
+  }
+
+  function _getPrototypeOf(o) {
+    _getPrototypeOf = Object.setPrototypeOf ? Object.getPrototypeOf : function _getPrototypeOf(o) {
+      return o.__proto__ || Object.getPrototypeOf(o);
+    };
+    return _getPrototypeOf(o);
+  }
+
+  function _setPrototypeOf(o, p) {
+    _setPrototypeOf = Object.setPrototypeOf || function _setPrototypeOf(o, p) {
+      o.__proto__ = p;
+      return o;
+    };
+
+    return _setPrototypeOf(o, p);
+  }
+
+  function _isNativeReflectConstruct() {
+    if (typeof Reflect === "undefined" || !Reflect.construct) return false;
+    if (Reflect.construct.sham) return false;
+    if (typeof Proxy === "function") return true;
+
+    try {
+      Boolean.prototype.valueOf.call(Reflect.construct(Boolean, [], function () {}));
+      return true;
+    } catch (e) {
+      return false;
+    }
+  }
+
   function _objectWithoutPropertiesLoose(source, excluded) {
     if (source == null) return {};
     var target = {};
@@ -133,6 +177,43 @@
     return target;
   }
 
+  function _assertThisInitialized(self) {
+    if (self === void 0) {
+      throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+    }
+
+    return self;
+  }
+
+  function _possibleConstructorReturn(self, call) {
+    if (call && (typeof call === "object" || typeof call === "function")) {
+      return call;
+    } else if (call !== void 0) {
+      throw new TypeError("Derived constructors may only return object or undefined");
+    }
+
+    return _assertThisInitialized(self);
+  }
+
+  function _createSuper(Derived) {
+    var hasNativeReflectConstruct = _isNativeReflectConstruct();
+
+    return function _createSuperInternal() {
+      var Super = _getPrototypeOf(Derived),
+          result;
+
+      if (hasNativeReflectConstruct) {
+        var NewTarget = _getPrototypeOf(this).constructor;
+
+        result = Reflect.construct(Super, arguments, NewTarget);
+      } else {
+        result = Super.apply(this, arguments);
+      }
+
+      return _possibleConstructorReturn(this, result);
+    };
+  }
+
   function _slicedToArray(arr, i) {
     return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _unsupportedIterableToArray(arr, i) || _nonIterableRest();
   }
@@ -142,7 +223,7 @@
   }
 
   function _iterableToArrayLimit(arr, i) {
-    var _i = arr && (typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"]);
+    var _i = arr == null ? null : typeof Symbol !== "undefined" && arr[Symbol.iterator] || arr["@@iterator"];
 
     if (_i == null) return;
     var _arr = [];
@@ -475,7 +556,7 @@
   }
 
   var _excluded = ["format"],
-      _excluded2 = ["children", "count", "parent", "i18nKey", "tOptions", "values", "defaults", "components", "ns", "i18n", "t"];
+      _excluded2 = ["children", "count", "parent", "tOptions", "values", "defaults", "components", "ns", "i18n", "t"];
 
   function hasChildren(node, checkLength) {
     if (!node) return false;
@@ -534,6 +615,10 @@
         }
       } else if (child === null) {
         warn("Trans: the passed in value is invalid - seems you passed in a null child.");
+      } else if (Array.isArray(child)) {
+        var _content = nodesToString(child, i18nOptions);
+
+        stringNode += "<".concat(childIndex, ">").concat(_content, "</").concat(childIndex, ">");
       } else if (_typeof(child) === 'object') {
         var format = child.format,
             clone = _objectWithoutProperties(child, _excluded);
@@ -553,7 +638,7 @@
     return stringNode;
   }
 
-  function renderNodes(children, targetString, i18n, i18nOptions, combinedTOpts) {
+  function renderNodes(children, targetString, i18n, i18nOptions, combinedTOpts, t) {
     if (targetString === '') return [];
     var keepArray = i18nOptions.transKeepBasicHtmlNodesFor || [];
     var emptyChildrenButNeedsHandling = targetString && new RegExp(keepArray.join('|')).test(targetString);
@@ -574,9 +659,11 @@
     var opts = _objectSpread2(_objectSpread2({}, data), combinedTOpts);
 
     function renderInner(child, node, rootReactNode) {
-      var childs = getChildren(child);
+      var _child$props;
+
+      var childs = getAsArray(getChildren(child));
       var mappedChildren = mapAST(childs, node.children, rootReactNode);
-      return hasValidReactChildren(childs) && mappedChildren.length === 0 ? childs : mappedChildren;
+      return hasValidReactChildren(childs) && mappedChildren.length === 0 ? childs : Array.isArray(child === null || child === void 0 ? void 0 : (_child$props = child.props) === null || _child$props === void 0 ? void 0 : _child$props.children) ? mappedChildren : mappedChildren[0];
     }
 
     function pushTranslatedJSX(child, inner, mem, i, isVoid) {
@@ -608,9 +695,9 @@
             var value = i18n.services.interpolator.interpolate(child, opts, i18n.language);
             mem.push(value);
           } else if (hasChildren(child) || isValidTranslationWithChildren) {
-              var inner = renderInner(child, node, rootReactNode);
-              pushTranslatedJSX(child, inner, mem, i);
-            } else if (isEmptyTransWithHTML) {
+            var inner = renderInner(child, node, rootReactNode);
+            pushTranslatedJSX(child, inner, mem, i);
+          } else if (isEmptyTransWithHTML) {
             var _inner = mapAST(reactNodes, node.children, rootReactNode);
 
             mem.push(React__default.cloneElement(child, _objectSpread2(_objectSpread2({}, child.props), {}, {
@@ -640,6 +727,10 @@
 
               mem.push("<".concat(node.name, ">").concat(_inner4, "</").concat(node.name, ">"));
             }
+          } else if (Array.isArray(child)) {
+            var _inner5 = mapAST(child, node.children, rootReactNode);
+
+            mem.push(_inner5);
           } else if (_typeof(child) === 'object' && !isElement) {
             var content = node.children[0] ? translationContent : null;
             if (content) mem.push(content);
@@ -654,15 +745,16 @@
           }
         } else if (node.type === 'text') {
           var wrapTextNodes = i18nOptions.transWrapTextNodes;
+          combinedTOpts.defaultValue = node.content;
 
-          var _content = i18n.services.interpolator.interpolate(node.content, opts, i18n.language);
+          var _content2 = i18n.services.interpolator.interpolate(t(node.content, combinedTOpts), opts, i18n.language);
 
           if (wrapTextNodes) {
             mem.push(React__default.createElement(wrapTextNodes, {
               key: "".concat(node.name, "-").concat(i)
-            }, _content));
+            }, _content2));
           } else {
-            mem.push(_content);
+            mem.push(_content2);
           }
         }
 
@@ -681,7 +773,6 @@
     var children = _ref.children,
         count = _ref.count,
         parent = _ref.parent,
-        i18nKey = _ref.i18nKey,
         _ref$tOptions = _ref.tOptions,
         tOptions = _ref$tOptions === void 0 ? {} : _ref$tOptions,
         values = _ref.values,
@@ -711,9 +802,8 @@
 
     var namespaces = ns || t.ns || defaultNSFromContext || i18n.options && i18n.options.defaultNS;
     namespaces = typeof namespaces === 'string' ? [namespaces] : namespaces || ['translation'];
-    var defaultValue = defaults || nodesToString(children, reactI18nextOptions) || reactI18nextOptions.transEmptyNodeValue || i18nKey;
-    var hashTransKey = reactI18nextOptions.hashTransKey;
-    var key = i18nKey || (hashTransKey ? hashTransKey(defaultValue) : defaultValue);
+    var defaultValue = defaults || nodesToString(children, reactI18nextOptions) || reactI18nextOptions.transEmptyNodeValue;
+    var key = defaultValue;
     var interpolationOverride = values ? tOptions.interpolation : {
       interpolation: _objectSpread2(_objectSpread2({}, tOptions.interpolation), {}, {
         prefix: '#$?',
@@ -729,10 +819,41 @@
     });
 
     var translation = key ? t(key, combinedTOpts) : defaultValue;
-    var content = renderNodes(components || children, translation, i18n, reactI18nextOptions, combinedTOpts);
+    var content = renderNodes(components || children, translation, i18n, reactI18nextOptions, combinedTOpts, t);
     var useAsParent = parent !== undefined ? parent : reactI18nextOptions.defaultTransParent;
     return useAsParent ? React__default.createElement(useAsParent, additionalProps, content) : content;
   }
+
+  var WithTrans = function WithTrans(Component) {
+    var _Component$prototype;
+
+    if ((_Component$prototype = Component.prototype) !== null && _Component$prototype !== void 0 && _Component$prototype.isReactComponent) {
+      return function (_Component) {
+        _inherits(_class, _Component);
+
+        var _super = _createSuper(_class);
+
+        function _class() {
+          _classCallCheck(this, _class);
+
+          return _super.apply(this, arguments);
+        }
+
+        _createClass(_class, [{
+          key: "render",
+          value: function render() {
+            return React__default.createElement(Trans, null, Component.prototype.render.call(this));
+          }
+        }]);
+
+        return _class;
+      }(Component);
+    } else {
+      return function (props) {
+        return React__default.createElement(Trans, null, Component(props));
+      };
+    }
+  };
 
   function useTranslation(ns) {
     var props = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
@@ -974,6 +1095,7 @@
   exports.I18nextProvider = I18nextProvider;
   exports.Trans = Trans;
   exports.Translation = Translation;
+  exports.WithTrans = WithTrans;
   exports.composeInitialProps = composeInitialProps;
   exports.date = date;
   exports.getDefaults = getDefaults;
@@ -994,4 +1116,4 @@
 
   Object.defineProperty(exports, '__esModule', { value: true });
 
-}));
+})));

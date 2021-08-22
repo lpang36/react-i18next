@@ -1,4 +1,5 @@
 export { Trans } from './Trans';
+export { WithTrans } from './WithTrans';
 export { useTranslation } from './useTranslation';
 export { withTranslation } from './withTranslation';
 export { Translation } from './Translation';
