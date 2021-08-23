@@ -283,10 +283,14 @@ export function Trans({
   defaults,
   components,
   ns,
+  disable,
   i18n: i18nFromProps,
   t: tFromProps,
   ...additionalProps
 }) {
+  if (disable)
+    return children;
+
   const { i18n: i18nFromContext, defaultNS: defaultNSFromContext } = useContext(I18nContext) || {};
   const i18n = i18nFromProps || i18nFromContext || getI18n();
 

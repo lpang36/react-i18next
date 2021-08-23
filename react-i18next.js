@@ -556,7 +556,7 @@
   }
 
   var _excluded = ["format"],
-      _excluded2 = ["children", "count", "parent", "tOptions", "values", "defaults", "components", "ns", "i18n", "t"];
+      _excluded2 = ["children", "count", "parent", "tOptions", "values", "defaults", "components", "ns", "disable", "i18n", "t"];
 
   function hasChildren(node, checkLength) {
     if (!node) return false;
@@ -779,9 +779,12 @@
         defaults = _ref.defaults,
         components = _ref.components,
         ns = _ref.ns,
+        disable = _ref.disable,
         i18nFromProps = _ref.i18n,
         tFromProps = _ref.t,
         additionalProps = _objectWithoutProperties(_ref, _excluded2);
+
+    if (disable) return children;
 
     var _ref2 = React.useContext(I18nContext) || {},
         i18nFromContext = _ref2.i18n,
