@@ -92,11 +92,8 @@ export function nodesToString(children, i18nOptions) {
           child,
         );
       }
-    } else {
-      warn(
-        `Trans: the passed in value is invalid - seems you passed in a variable like {number} - please pass in variables for interpolation as full objects like {{number}}.`,
-        child,
-      );
+    } else if (child !== undefined && child !== null) {
+      stringNode += child;
     }
   });
 

@@ -631,8 +631,8 @@
         } else {
           warn("react-i18next: the passed in object contained more than one variable - the object should look like {{ value, format }} where format is optional.", child);
         }
-      } else {
-        warn("Trans: the passed in value is invalid - seems you passed in a variable like {number} - please pass in variables for interpolation as full objects like {{number}}.", child);
+      } else if (child !== undefined && child !== null) {
+        stringNode += child;
       }
     });
     return stringNode;
