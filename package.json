@@ -1,6 +1,6 @@
 {
   "name": "@mentum-group/react-i18next",
-  "version": "1.0.12",
+  "version": "1.0.14",
   "description": "a fork of react-i18next, which adds support for auto detecting and translating text",
   "main": "dist/commonjs/index.js",
   "types": "./index.d.ts",
