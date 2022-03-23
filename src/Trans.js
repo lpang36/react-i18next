@@ -297,7 +297,7 @@ export function Trans({
   }
 
   // wrap everything in a fragment to guarantee we have only one child
-  children = React.createElement(React.Fragment, null, ...children);
+  children = React.createElement(React.Fragment, null, ...getAsArray(children));
 
   const t = tFromProps || i18n.t.bind(i18n) || ((k) => k);
 

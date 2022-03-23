@@ -813,7 +813,7 @@
       return children;
     }
 
-    children = React__default.createElement.apply(React__default, [React__default.Fragment, null].concat(_toConsumableArray(children)));
+    children = React__default.createElement.apply(React__default, [React__default.Fragment, null].concat(_toConsumableArray(getAsArray(children))));
 
     var t = tFromProps || i18n.t.bind(i18n) || function (k) {
       return k;
